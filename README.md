@@ -29,17 +29,18 @@ Manager Message: “Send a data packet”:
 
 For example, suppose the destination ID is 4 and message is “hello”. The manager command will be: 
 
-           “send4hello” 
+	“send4hello” 
 
 where 4 occupies 2 bytes and is in the network order. You need to convert it to the host order to get the correct destID. Note that there is no space delimiter among "send", destID and the message body. 
 
 Manager Message: “New cost to your neighbor” (Optional):
 
-"cost"<4 ASCII bytes>destID<net order 2 bytes>newCost<net order 4 bytes>
+	"cost"<4 ASCII bytes>destID<net order 2 bytes>newCost<net order 4 bytes>
 
-	Example: the manager informs node 2 that the cost to node 5 is set to 33. The command received by node 2 will be:
+Example: the manager informs node 2 that the cost to node 5 is set to 33. The command received by node 2 will be:
 
-           “cost533” 
+	“cost533” 
+	
 where 5 occupies 2 bytes and 33 occupies 4 bytes. Both of them are in the network order. You need to convert them to the host order to get the correct destID and newCost. Note that there is no space delimiter among "cost", destID and newCost. 
 
 Our auto-grader doesn't include a test case using the cost command. However, we recommend handling “cost” messages in your router because:
@@ -55,9 +56,8 @@ The source code of the manager is included in the attachment. You can read it to
 Your Router Nodes
 Whether you are writing an LS or DV/PV node, your node's interface to the assignment environment is the same. Your node should run with command-line arguments like this:
 
-./ls_router nodeid initialcostsfile logfile
-
-./ls_router 5 node5costs logout5.txt
+	./ls_router nodeid initialcostsfile logfile
+	./ls_router 5 node5costs logout5.txt
 
 When originating, forwarding, or receiving a data packet, your node should log the event to its log file. The sender of a packet should also log when it learns that the packet was undeliverable. The format of the logging is described in the next section. Note: even if the node has nothing to write to the log file, the log file should still be created.
 
@@ -71,7 +71,7 @@ Forward any data packets that come along according to the forwarding table.
 
 React to changes in the topology (specifically, links becoming available or failing) by realizing that the change has happened and updating routes and forwarding tables appropriately. Your nodes should converge within 5 seconds of the most recent change.
 
-T​here are a couple special cases that your routers must handle.
+There are a couple special cases that your routers must handle.
 
 Network partitions: the network might become partitioned, meaning that there is some subset of nodes that is cut off from other nodes, with no operational paths.  If and when this occurs, your protocols should react correctly: when a node is asked to originate a packet towards a destination it does not know a path for, it should drop the packet, and rather than log a "send" event, log an "unreachable" event (see File Formats section).
 
@@ -82,37 +82,38 @@ Your nodes take the “initial costs file” as input, and write their output to
 
 Initial costs file format: The initial cost file given to some node X consists of zero or more lines. Each line indicates that node X has a link in the topology to another neighboring node, and that link has a certain cost:
 
-<neighboring node ID> <cost>
-<neighboring node ID> <cost>
-...
+	<neighboring node ID> <cost>
+	<neighboring node ID> <cost>
+	...
   
 For example, the initial costs file might look like this:
-5 23453245 
-2 1 
-3 23 
-19 1919
-200 23555
+
+	5 23453245 
+	2 1 
+	3 23 
+	19 1919
+	200 23555
 
 In the above example, if this file was given to node 6, then the link between nodes 5 and 6 has cost 23453245 – as long as that link is up in the physical topology. 
 
 If you don't find an entry for a node, default to cost 1. We will only use positive costs – never 0 or negative. We will not try to break your program with malformed inputs.  Once again, just because this file contains a line for node n, it does NOT imply that your node will be neighbors with n. 
 
 Log file format: See our provided code later in this document for sprintf()s that generate the log file lines correctly.  It is important that you use the right format, since these files will be inspected by the autograder.  The log file might take the form something like this:
-  
-forward packet dest [nodeid] nexthop [nodeid] message [text text] 
-sending packet dest [nodeid] nexthop [nodeid] message [text text] 
-receive packet message [text text text] 
-unreachable dest [nodeid] 
-...
+
+	forward packet dest [nodeid] nexthop [nodeid] message [text text] 
+	sending packet dest [nodeid] nexthop [nodeid] message [text text] 
+	receive packet message [text text text] 
+	unreachable dest [nodeid] 
+	...	
   
 In the following specific example, the node forwarded a message bound for node 56, received a message for itself, originated packets for nodes 11 and 12 (but realized it couldn't reach 12), then forwarded another two packets.
 
-forward packet dest 56 nexthop 11 message Message1 
-receive packet message Message2! 
-sending packet dest 11 nexthop 11 message hello there!
-unreachable dest 12 
-forward packet dest 23 nexthop 11 message Message4 
-forward packet dest 56 nexthop 11 message Message5 
+	forward packet dest 56 nexthop 11 message Message1 
+	receive packet message Message2! 
+	sending packet dest 11 nexthop 11 message hello there!
+	unreachable dest 12 
+	forward packet dest 23 nexthop 11 message Message4 
+	forward packet dest 56 nexthop 11 message Message5 
   
   
 Our tests will have data packets be sent relatively far apart, so don't worry about ordering. 
@@ -124,16 +125,21 @@ To make the nodes send messages, or change link costs while the programs are run
 
 To bring links up and down while running, you can use iptables to add or remove rules permitting communication between certain IP addresses.  For example, to bring up the link between nodes 1 and 2:
   
-sudo iptables -I OUTPUT -s 10.1.1.1 -d 10.1.1.2 -j ACCEPT ; sudo iptables -I OUTPUT -s 10.1.1.2 -d 10.1.1.1 -j ACCEPT
+	sudo iptables -I OUTPUT -s 10.1.1.1 -d 10.1.1.2 -j ACCEPT ; sudo iptables -I OUTPUT -s 10.1.1.2 -d 10.1.1.1 -j ACCEPT
 To take that link down:
-sudo iptables -D OUTPUT -s 10.1.1.1 -d 10.1.1.2 -j ACCEPT ; sudo iptables -D OUTPUT -s 10.1.1.2 -d 10.1.1.1 -j ACCEPT
+
+	sudo iptables -D OUTPUT -s 10.1.1.1 -d 10.1.1.2 -j ACCEPT ; sudo iptables -D OUTPUT -s 10.1.1.2 -d 10.1.1.1 -j ACCEPT
+	
 To write to the log file, code like the following will produce the correct format recognized by the autograder: 
-sprintf(logLine, "sending packet dest %d nexthop %d message %s\n", dest, nexthop, message); 
-sprintf(logLine, "forward packet dest %d nexthop %d message %s\n", dest, nexthop, message); 
-sprintf(logLine, "receive packet message %s\n", message); 
-sprintf(logLine, "unreachable dest %d\n", dest); 
-  
-... and then fwrite(logLine, 1, strlen(logLine), theLogFile); 
+
+	sprintf(logLine, "sending packet dest %d nexthop %d message %s\n", dest, nexthop, message); 
+	sprintf(logLine, "forward packet dest %d nexthop %d message %s\n", dest, nexthop, message); 
+	sprintf(logLine, "receive packet message %s\n", message); 
+	sprintf(logLine, "unreachable dest %d\n", dest); 
+	... 
+and then:
+
+	fwrite(logLine, 1, strlen(logLine), theLogFile); 
 
 If that's all you do to the log file, you will have the correct format. You should also flush the buffer to ensure the output is written to stable storage.  (Don't worry about closing the file; it will be closed when your process is killed.)
 
